@@ -1,0 +1,12 @@
+*.csv
+*.mat
+*.pt
+*.pth
+*.npz
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.*
+!.env.example
