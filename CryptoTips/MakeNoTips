@@ -1,0 +1,46 @@
+
+import numpy as np
+import pandas as pd
+from scipy.io import loadmat, savemat
+from pathlib import Path
+
+BASE = Path(__file__).resolve().parent
+df = pd.read_csv(BASE.parent / "data" / "ETH_1sec.csv")
+d = loadmat(BASE / "ETH_tips.mat")
+
+price = df["midpoint"].to_numpy()
+names = [str(n[0]) for n in d["feature_names"].ravel()]
+n = len(d["X"])
+
+seconds, threshold = 5, 6
+before, after = 100, 5
+
+# Detect future price jumps
+change = np.abs(price[seconds:] - price[:-seconds])
+jump = change >= threshold
+
+# Candidate non-tip starts: no jump in the future interval
+valid = np.where(~jump)[0]
+valid = valid[(valid >= before) & (valid + seconds + after <= len(df))]
+
+# Keep negatives away from labelled positive events
+tips = d["tip_indices"].ravel().astype(int)
+valid = valid[np.searchsorted(np.sort(tips), valid).clip(0, len(tips)-1) >= 0] if len(tips) else valid
+valid = valid[np.array([np.min(np.abs(tips-i)) > 10 for i in valid])] if len(tips) else valid
+
+rng = np.random.default_rng(42)
+chosen = rng.choice(valid, n, replace=False)
+
+X = np.array([
+    df.iloc[i-before:i+seconds+after][names].to_numpy()
+    for i in chosen
+], dtype="float32")
+
+savemat(BASE / "ETH_notips.mat", {
+    "X": X,
+    "indices": chosen,
+    "feature_names": np.array(names, dtype=object)
+})
+
+print("Non-tip trajectories:", len(X))
+print("Shape:", X.shape)

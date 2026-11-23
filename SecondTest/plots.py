@@ -10,13 +10,24 @@ FILE = Path(__file__).resolve().parent.parent / "Data" / "largesample_case1data.
 # Load MATLAB data
 data = loadmat(FILE)
 
-x = data['ts_analysis'].T
-L = data['label'].ravel()
+X = data['ts_analysis'].T
+y = data['label'].ravel()
 
 
-n= random.randint(1, 100000)
-print(n)
-n = 90000
-plt.plot(x[n, 580 : 680])
-print(L[n])
+
+rng = np.random.default_rng(42)
+
+plt.figure(figsize=(10, 5))
+
+for label, colour in [(0, "blue"), (1, "red")]:
+    ids = rng.choice(np.where(y == label)[0], 1000, replace=False)
+    values = X[ids, 580:680]
+    plt.plot(np.arange(580, 680), values.sum(axis=0),
+             color=colour, label=f"{'Tip' if label else 'No Tip'}")
+
+plt.xlabel("Observation")
+plt.ylabel("Summed system state")
+plt.title("100 Huang Trajectories (1 Tip, 1 No Tip)")
+plt.legend()
+plt.grid()
 plt.show()

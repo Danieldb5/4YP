@@ -83,6 +83,6 @@ torch.save({
     "std": float(sd),
     "start": a,
     "end": b
-}, Path(__file__).resolve().parent / "huang_cnn_gradcam580.pt")
+}, Path(__file__).resolve().parent / "huang_cnn_gradcam680.pt")
 
 print("CNN model saved!")
